@@ -268,6 +268,7 @@
         let currentRunningBtn = null;
         let isResting = false;
         let activeGroup = null;
+        let restEndTime = null; // 休息结束的绝对时间，跟服务器同步
 
         // 蜂鸣提示音
         let audioCtx = null;
@@ -457,11 +458,27 @@
 
             // 推送已在点击时提前调度，这里不再重复
 
-            const endTime = Date.now() + REST_SECONDS * 1000;
+            // 用预计算的 restEndTime（跟服务器同步），如果没有就用当前时间+REST_SECONDS
+            const endTime = restEndTime || (Date.now() + REST_SECONDS * 1000);
+            restEndTime = null;
+
             const display = document.getElementById('timerDisplay');
             const label = document.getElementById('timerLabel');
 
-            display.textContent = formatTime(REST_SECONDS);
+            const initialRemaining = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+
+            // 如果已经过了（比如回来太晚），直接结束休息
+            if (initialRemaining <= 0) {
+                isResting = false;
+                display.textContent = '0:00';
+                display.className = 'timer-display done';
+                label.textContent = '休息结束，继续！';
+                playBeep();
+                enableAllButtons();
+                return;
+            }
+
+            display.textContent = formatTime(initialRemaining);
             display.className = 'timer-display resting';
             label.textContent = '🛋 休息中...';
 
@@ -532,6 +549,8 @@
             // 如果是该组最后一个，提前调度休息推送
             if (isLastInGroup) {
                 scheduleServerPush(SECONDS_PER_POINT + REST_SECONDS, '🔥 休息结束！', '继续下一组！');
+                // 记录休息结束的绝对时间，供 startRest 同步使用
+                restEndTime = Date.now() + (SECONDS_PER_POINT + REST_SECONDS) * 1000;
             }
 
             // 开始倒计时
