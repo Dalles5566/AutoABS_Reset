@@ -303,6 +303,7 @@
         // ===== Web Push 通知 =====
         const PUSH_SERVER = '';
         const VAPID_PUBLIC = 'BBZDLq8voeq639kFuM-27OLy2vQzItdD2j_AkKB8PoaRqUFWwKDUH_k_AyzN0hS6JdyvjcE-n2aGl_I-om8AbPM';
+        let pushEndpoint = null;
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -336,22 +337,36 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sub)
             });
-            // 保存 endpoint 用于后续 notify 请求
-            window._pushEndpoint = sub.endpoint;
+            pushEndpoint = sub.endpoint;
             console.log('Push subscription registered');
         }
 
-        function scheduleServerPush(delay, title, body) {
-            fetch(PUSH_SERVER + '/notify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ delay, title, body, endpoint: window._pushEndpoint })
-            }).catch(err => console.error('Failed to schedule push:', err));
-        }
+        // 调度服务器推送。如果订阅还没就绪或服务器丢了订阅，自动重新订阅后重试一次
+        async function scheduleServerPush(delay, title, body, isRetry) {
+            if (!pushEndpoint) {
+                if (isRetry) return;
+                await subscribePush();
+                if (!pushEndpoint) return;
+            }
 
-        // 前台通知已由服务器推送处理，这里不再重复
-        function sendNotification(title, body) {
-            // 不再本地发通知，避免重复
+            try {
+                const res = await fetch(PUSH_SERVER + '/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delay, title, body, endpoint: pushEndpoint })
+                });
+
+                // 服务器重启后订阅丢了，重新订阅再试一次
+                if (res.status === 400 && !isRetry) {
+                    pushEndpoint = null;
+                    await subscribePush();
+                    if (pushEndpoint) {
+                        scheduleServerPush(delay, title, body, true);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to schedule push:', err);
+            }
         }
 
         function shuffle(arr) {
@@ -414,7 +429,6 @@
                     display.textContent = '✓';
                     label.textContent = exerciseName + ' — 完成！';
                     playBeep();
-                    sendNotification('🔥 时间到！', exerciseName + ' — 完成！');
                     onComplete();
                 } else {
                     display.textContent = formatTime(remaining);
@@ -462,7 +476,6 @@
                     display.className = 'timer-display done';
                     label.textContent = '休息结束，继续！';
                     playBeep();
-                    sendNotification('🔥 休息结束！', '继续下一组！');
                     enableAllButtons();
                 } else {
                     display.textContent = formatTime(remaining);
