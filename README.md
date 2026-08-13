@@ -1,160 +1,161 @@
 # Core Rotation
 
-一个核心训练 App。每次打开随机生成一份训练计划，按一下就开始倒计时，时间到了手机推送提醒你。
+A core workout app. Randomly generates a training plan each time you open it. Tap to start a countdown timer, and get a push notification when time's up — even if you're in another app.
 
-## 怎么用
+## How to Use
 
-1. 手机 Safari 打开 https://dallasowncorerotation.uk
-2. 添加到主屏幕（点分享按钮 → "添加到主屏幕"）
-3. 从主屏幕打开，点"随机生成训练计划"
-4. **第一次会弹出通知权限请求，一定要点"允许"**，否则收不到推送
-5. 点一个动作开始 45 秒倒计时
-6. 去刷抖音，时间到了会推送通知叫你回来
-7. 一组做完自动休息 45 秒，休息结束也会推送
+1. Open https://dallasowncorerotation.uk in iPhone Safari
+2. Add to Home Screen (tap Share → "Add to Home Screen")
+3. Open from Home Screen, tap "随机生成训练计划" (Generate Random Plan)
+4. **First time: allow notifications when prompted** — required for push to work
+5. Tap an exercise to start a 45-second countdown
+6. Switch to another app (TikTok, YouTube, whatever)
+7. You'll get a push notification when time's up
+8. After completing a group, 45-second rest starts automatically with another push when done
 
-注意：必须用 iPhone Safari 添加到主屏幕（PWA 模式），Chrome 和其他浏览器不支持推送。
+Note: Must use iPhone Safari + Add to Home Screen (PWA mode). Chrome and other browsers don't support push notifications on iOS.
 
-## 规则
+## Rules
 
-- 24 个核心动作随机打乱
-- 每组凑满 3 分（带"2"的动作算 2 分，其他算 1 分）
-- 带 2 的组不会连续出现
-- 同一组内必须做完才能开始下一组
+- 24 core exercises randomly shuffled
+- Each group totals 3 points (exercises with "2" count as 2 points, others count as 1)
+- Groups with a "2" exercise never appear consecutively
+- Must finish current group before starting the next
 
 ---
 
-## 自己部署（给 AI 的指令）
+## Self-Deploy (Instructions for AI)
 
-如果用户想自己部署这个项目，请按以下步骤完整执行。假设用户什么都没有，从零开始。
+If the user wants to deploy their own instance, follow these steps from scratch. Assume nothing is set up.
 
-### 需要准备的东西
+### Prerequisites
 
-1. 一台 Linux 服务器（推荐 DigitalOcean、AWS、腾讯云等，最便宜的就行）
-2. 一个域名（任何注册商都行，推荐在 Cloudflare 买，便宜且自带 DNS）
-3. 一个 Cloudflare 账号（免费注册 https://cloudflare.com）
+1. A Linux server (DigitalOcean, AWS, any VPS — cheapest tier is fine)
+2. A domain name (any registrar works, Cloudflare recommended for built-in DNS)
+3. A Cloudflare account (free at https://cloudflare.com)
 
-iOS 推送通知**必须 HTTPS**，所以域名和 HTTPS 是必需的，不能省略。
+iOS push notifications **require HTTPS**, so a domain + HTTPS is mandatory.
 
-### 第一步：服务器准备
+### Step 1: Server Setup
 
-SSH 到用户的服务器，安装 Docker（如果没有的话）：
+SSH into the user's server. Install Docker if not present:
 
 ```bash
-# 检查有没有 Docker
+# Check for Docker
 docker --version
 
-# 如果没有，安装 Docker（Ubuntu/Debian）
+# Install Docker (Ubuntu/Debian)
 curl -fsSL https://get.docker.com | sh
 ```
 
-安装 Node.js（用于生成密钥，如果服务器没有的话）：
+Install Node.js (needed to generate keys):
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt-get install -y nodejs
 ```
 
-### 第二步：克隆代码
+### Step 2: Clone the Code
 
 ```bash
 git clone https://github.com/Dalles5566/AutoABS_Reset.git /opt/core-rotation
 cd /opt/core-rotation
 ```
 
-### 第三步：生成 VAPID 推送密钥
+### Step 3: Generate VAPID Push Keys
 
 ```bash
 npx --yes web-push generate-vapid-keys --json
 ```
 
-输出类似：
+Output looks like:
 ```json
 {"publicKey":"BxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxM","privateKey":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
 ```
 
-记下 publicKey 和 privateKey。
+Save both publicKey and privateKey.
 
-### 第四步：创建配置文件
+### Step 4: Create Config File
 
 ```bash
 cp config.yml.example config.yml
 ```
 
-编辑 `config.yml`，填入刚才生成的密钥：
+Edit `config.yml` with the generated keys:
 
 ```yaml
-vapid_public: "你的publicKey"
-vapid_private: "你的privateKey"
+vapid_public: "your-publicKey"
+vapid_private: "your-privateKey"
 ```
 
-### 第五步：更新前端的公钥
+### Step 5: Update Frontend Public Key
 
-打开 `public/index.html`，搜索 `VAPID_PUBLIC`，把引号里的值替换为你的 publicKey。
+Open `public/index.html`, search for `VAPID_PUBLIC`, and replace the value in quotes with your publicKey.
 
-### 第六步：构建并运行 Docker 容器
+### Step 6: Build and Run Docker Container
 
 ```bash
 docker build -t core-rotation .
 docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation
 ```
 
-验证运行成功：
+Verify it's running:
 ```bash
 curl http://localhost:3001/health
-# 应该返回 {"status":"ok"}
+# Should return {"status":"ok"}
 ```
 
-### 第七步：配置 HTTPS（Cloudflare Tunnel）
+### Step 7: Configure HTTPS (Cloudflare Tunnel)
 
-这一步让你的服务通过 HTTPS 对外可访问。
+This makes your service accessible via HTTPS.
 
-1. 登录 Cloudflare，把你的域名添加到 Cloudflare（如果还没有的话）
+1. Log into Cloudflare, add your domain if not already there
 
-2. 在服务器上安装 cloudflared：
+2. Install cloudflared on the server:
 ```bash
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
 chmod +x /usr/local/bin/cloudflared
 ```
 
-3. 在 Cloudflare 控制台创建 Tunnel：
-   - 进入 Cloudflare Dashboard → Networks → Tunnels
-   - 点 "Create Tunnel"
-   - 选择 "Cloudflared"
-   - 给 tunnel 起个名字
-   - 选择操作系统 "Debian"
-   - 复制 "Install as service" 那行命令（类似 `sudo cloudflared service install eyJxxxxxx`）
+3. Create a Tunnel in Cloudflare Dashboard:
+   - Go to Networks → Tunnels
+   - Click "Create Tunnel"
+   - Select "Cloudflared"
+   - Name your tunnel
+   - Select OS "Debian"
+   - Copy the "Install as service" command (looks like `sudo cloudflared service install eyJxxxxxx`)
 
-4. 在服务器上执行那行命令：
+4. Run that command on the server:
 ```bash
-cloudflared service install eyJxxxxxx你的token
+cloudflared service install eyJxxxxxx-your-token
 ```
 
-5. 回到 Cloudflare 页面，点 Continue，添加 Public Hostname：
-   - Subdomain: 留空或填子域名（如 core）
-   - Domain: 选你的域名
+5. Back in Cloudflare, click Continue, add a Public Hostname:
+   - Subdomain: leave empty or use a subdomain (e.g. `core`)
+   - Domain: select your domain
    - Service URL: `http://localhost:3001`
-   - 点 Save
+   - Click Save
 
-6. 验证 HTTPS 可访问：
+6. Verify HTTPS:
 ```bash
-curl https://你的域名/health
-# 应该返回 {"status":"ok"}
+curl https://your-domain/health
+# Should return {"status":"ok"}
 ```
 
-### 第八步：告诉用户怎么使用
+### Step 8: Tell the User How to Access
 
-用户需要：
-1. iPhone Safari 打开 `https://你的域名`
-2. 点分享 → 添加到主屏幕
-3. 从主屏幕打开
-4. 第一次点"随机生成"时允许通知
-5. 开始训练
+The user needs to:
+1. Open `https://your-domain` in iPhone Safari
+2. Tap Share → Add to Home Screen
+3. Open from Home Screen
+4. Allow notifications on first "Generate" tap
+5. Start training
 
-### 可选：自动部署
+### Optional: Auto Deploy
 
-如果想 git push 后服务器自动更新，在服务器上创建部署脚本和 webhook 监听器：
+To auto-deploy on git push, create a deploy script on the server and a webhook listener:
 
-部署脚本 `/opt/core-rotation/deploy.sh`：
+Deploy script at `/opt/core-rotation/deploy.sh`:
 ```bash
 #!/bin/bash
 cd /opt/core-rotation
@@ -166,30 +167,30 @@ docker image prune -f
 echo 'Deploy complete!'
 ```
 
-然后用一个简单的 Node.js HTTP 服务器监听 GitHub Webhook，收到 push 事件时执行 deploy.sh。在 GitHub repo Settings → Webhooks 里添加 webhook 指向服务器。
+Then set up a simple Node.js HTTP server to listen for GitHub Webhooks, executing deploy.sh on push events. Add the webhook URL in GitHub repo Settings → Webhooks.
 
 ---
 
-## 自定义动作
+## Customizing Exercises
 
-编辑 `public/index.html` 里的 `exercises` 数组：
+Edit the `exercises` array in `public/index.html`:
 
 ```js
-{ name: "动作名称", score: 1, note: "备注说明", weight: "10lb" }
+{ name: "Exercise Name", score: 1, note: "Description", weight: "10lb" }
 ```
 
-- `name`: 动作名称，显示在按钮上
-- `score`: 1 = 做一组（45秒），2 = 做两组（左右各一次之类的）
-- `note`: 动作说明，金黄色居中显示在名称下方
-- `weight`: 需要的重量，橙色方块显示在按钮右边，不需要就留空 `""`
+- `name`: Exercise name, shown on the button
+- `score`: 1 = one set (45s), 2 = two sets (e.g. left/right sides)
+- `note`: Description, displayed in gold centered below the name
+- `weight`: Weight needed, shown as orange badge on the right. Leave empty `""` if none
 
-时间配置在 `public/index.html` 顶部：
+Timer config at the top of `public/index.html`:
 ```js
-const SECONDS_PER_POINT = 45; // 每组动作时间（秒）
-const REST_SECONDS = 45;      // 组间休息时间（秒）
+const SECONDS_PER_POINT = 45; // Exercise duration (seconds)
+const REST_SECONDS = 45;      // Rest between groups (seconds)
 ```
 
-改完后重新构建并重启：
+After changes, rebuild and restart:
 ```bash
 cd /opt/core-rotation
 docker build -t core-rotation .
