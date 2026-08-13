@@ -1,63 +1,34 @@
-# Core Rotation Workout App
+# Core Rotation
 
-核心训练随机生成器 + 计时器 + 推送通知
+一个核心训练 App。每次打开随机生成一份训练计划，按一下就开始倒计时，时间到了手机推送提醒你。
 
-## 功能
+## 怎么用
 
-- 24个核心训练动作随机打乱，每组凑满3分
-- 带"2"的动作算2分（做两边），其他算1分
-- 带2的组不连续出现
-- 每个动作是一个按钮，点击开始45秒倒计时
-- 倒计时结束后服务器发送 Web Push 通知（后台也能收到）
-- 整组完成后自动进入45秒休息
-- 点击动作后自动跳转抖音，时间到了推送提醒回来
-- PWA 支持：添加到主屏幕像原生 App 一样使用
+1. 手机 Safari 打开 https://dallasowncorerotation.uk
+2. 添加到主屏幕
+3. 打开，点"随机生成训练计划"
+4. 点一个动作开始 45 秒倒计时
+5. 去刷抖音，时间到了会推送通知叫你回来
+6. 一组做完自动休息 45 秒，休息结束也会推送
 
-## 技术栈
+## 规则
 
-- **前端**: 纯 HTML/CSS/JS, PWA (Service Worker + Web Push)
-- **后端**: Node.js + Express + web-push
-- **部署**: Docker + Cloudflare Tunnel (HTTPS)
-- **自动部署**: GitHub Webhook → 服务器自动 pull + build + restart
+- 24 个核心动作随机打乱
+- 每组凑满 3 分（带"2"的动作算 2 分，其他算 1 分）
+- 带 2 的组不会连续出现
+- 同一组内必须做完才能开始下一组
 
-## 项目结构
+## 自己部署
 
-```
-├── public/
-│   ├── index.html      # 前端页面
-│   ├── manifest.json   # PWA 配置
-│   └── sw.js           # Service Worker (缓存 + Push 事件处理)
-├── server.js           # 后端 API (推送订阅 + 定时推送)
-├── package.json
-├── Dockerfile
-└── README.md
-```
+需要：Docker + 一个 HTTPS 域名
 
-## 配置
-
-`public/index.html` 顶部：
-```js
-const SECONDS_PER_POINT = 45; // 每组动作时间
-const REST_SECONDS = 45;      // 组间休息时间
-```
-
-动作列表在 `exercises` 数组中，每个动作有：
-- `name`: 动作名称
-- `score`: 1 或 2（决定分数和组数）
-- `note`: 备注说明
-- `weight`: 重量标注
-
-## 部署
-
-代码 push 到 GitHub 后自动部署到服务器。
-
-手动部署：
 ```bash
+# 生成推送密钥
+npx web-push generate-vapid-keys
+
+# 把密钥填到 server.js 里，然后
 docker build -t core-rotation .
-docker stop core-rotation && docker rm core-rotation
-docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation:latest
+docker run -d --name core-rotation -p 3001:3001 core-rotation
 ```
 
-## 访问
-
-https://dallasowncorerotation.uk
+然后用 Nginx/Cloudflare Tunnel 之类的给 3001 端口加 HTTPS 就行。
