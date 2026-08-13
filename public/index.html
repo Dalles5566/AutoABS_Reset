@@ -440,8 +440,7 @@
             isResting = true;
             disableAllButtons();
 
-            // 让服务器在休息结束时发推送
-            scheduleServerPush(REST_SECONDS, '🔥 休息结束！', '继续下一组！');
+            // 推送已在点击时提前调度，这里不再重复
 
             const endTime = Date.now() + REST_SECONDS * 1000;
             const display = document.getElementById('timerDisplay');
@@ -507,6 +506,17 @@
 
             // 更新按钮状态文字
             btn.querySelector('.ex-status').textContent = `⏱ 第 ${currentSet}/${totalSets} 组 进行中...`;
+
+            // 检查这是不是该组最后一个动作/最后一组
+            const group = btn.closest('.group');
+            const groupButtons = group.querySelectorAll('.exercise-btn');
+            const othersCompleted = Array.from(groupButtons).every(b => b === btn || b.classList.contains('completed'));
+            const isLastInGroup = othersCompleted && currentSet >= totalSets;
+
+            // 如果是该组最后一个，提前调度休息推送
+            if (isLastInGroup) {
+                scheduleServerPush(SECONDS_PER_POINT + REST_SECONDS, '🔥 休息结束！', '继续下一组！');
+            }
 
             // 开始倒计时
             startTimer(SECONDS_PER_POINT, `${name}（${currentSet}/${totalSets}）`, () => {
