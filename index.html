@@ -339,21 +339,16 @@
                 clearInterval(timerInterval);
             }
 
-            let remaining = seconds;
+            const endTime = Date.now() + seconds * 1000;
             const display = document.getElementById('timerDisplay');
             const label = document.getElementById('timerLabel');
 
-            display.textContent = formatTime(remaining);
+            display.textContent = formatTime(seconds);
             display.className = 'timer-display active';
             label.textContent = exerciseName;
 
             timerInterval = setInterval(() => {
-                remaining--;
-                display.textContent = formatTime(remaining);
-
-                if (remaining <= 5) {
-                    display.className = 'timer-display warning';
-                }
+                const remaining = Math.ceil((endTime - Date.now()) / 1000);
 
                 if (remaining <= 0) {
                     clearInterval(timerInterval);
@@ -364,6 +359,12 @@
                     playBeep();
                     sendNotification('🔥 时间到！', exerciseName + ' — 完成！');
                     onComplete();
+                } else {
+                    display.textContent = formatTime(remaining);
+                    if (remaining <= 5) {
+                        display.className = 'timer-display warning';
+                    }
+                }
                 }
             }, 1000);
         }
@@ -384,17 +385,16 @@
             isResting = true;
             disableAllButtons();
 
-            let remaining = REST_SECONDS;
+            const endTime = Date.now() + REST_SECONDS * 1000;
             const display = document.getElementById('timerDisplay');
             const label = document.getElementById('timerLabel');
 
-            display.textContent = formatTime(remaining);
+            display.textContent = formatTime(REST_SECONDS);
             display.className = 'timer-display resting';
             label.textContent = '🛋 休息中...';
 
             timerInterval = setInterval(() => {
-                remaining--;
-                display.textContent = formatTime(remaining);
+                const remaining = Math.ceil((endTime - Date.now()) / 1000);
 
                 if (remaining <= 0) {
                     clearInterval(timerInterval);
@@ -406,6 +406,8 @@
                     playBeep();
                     sendNotification('🔥 休息结束！', '继续下一组！');
                     enableAllButtons();
+                } else {
+                    display.textContent = formatTime(remaining);
                 }
             }, 1000);
         }
