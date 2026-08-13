@@ -348,17 +348,9 @@
             }).catch(err => console.error('Failed to schedule push:', err));
         }
 
-        // 前台通知（回来时补发）
+        // 前台通知已由服务器推送处理，这里不再重复
         function sendNotification(title, body) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification(title, { body: body, tag: 'core-timer' });
-                    });
-                } else {
-                    new Notification(title, { body: body });
-                }
-            }
+            // 不再本地发通知，避免重复
         }
 
         function shuffle(arr) {
