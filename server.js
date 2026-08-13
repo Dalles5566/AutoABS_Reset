@@ -26,7 +26,7 @@ let subscription = null;
 // 注册推送订阅
 app.post('/subscribe', (req, res) => {
   subscription = req.body;
-  console.log('Push subscription registered');
+  console.log('Push subscription registered:', JSON.stringify(subscription).slice(0, 200));
   res.json({ success: true });
 });
 
@@ -47,8 +47,8 @@ app.post('/notify', (req, res) => {
     });
 
     webpush.sendNotification(subscription, payload)
-      .then(() => console.log('Push sent'))
-      .catch(err => console.error('Push failed:', err));
+      .then(() => console.log('Push sent successfully to:', subscription.endpoint))
+      .catch(err => console.error('Push failed:', err.statusCode, err.body));
   }, delayMs);
 
   res.json({ success: true, willNotifyIn: delay });
