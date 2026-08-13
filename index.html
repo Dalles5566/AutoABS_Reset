@@ -269,6 +269,37 @@
         let isResting = false;
         let activeGroup = null;
 
+        // 蜂鸣提示音
+        function playBeep() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            function beep(time) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.value = 0.3;
+                osc.start(time);
+                osc.stop(time + 0.15);
+            }
+            beep(ctx.currentTime);
+            beep(ctx.currentTime + 0.25);
+            beep(ctx.currentTime + 0.5);
+        }
+
+        // 系统通知
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body: body, icon: '🔥' });
+            }
+        }
+
         function shuffle(arr) {
             const a = [...arr];
             for (let i = a.length - 1; i > 0; i--) {
@@ -330,6 +361,8 @@
                     display.className = 'timer-display done';
                     display.textContent = '✓';
                     label.textContent = exerciseName + ' — 完成！';
+                    playBeep();
+                    sendNotification('🔥 时间到！', exerciseName + ' — 完成！');
                     onComplete();
                 }
             }, 1000);
@@ -370,6 +403,8 @@
                     display.textContent = '0:00';
                     display.className = 'timer-display done';
                     label.textContent = '休息结束，继续！';
+                    playBeep();
+                    sendNotification('🔥 休息结束！', '继续下一组！');
                     enableAllButtons();
                 }
             }, 1000);
@@ -445,6 +480,8 @@
         }
 
         function generate() {
+            // 请求通知权限
+            requestNotificationPermission();
             // 停止计时器
             if (timerInterval) {
                 clearInterval(timerInterval);
