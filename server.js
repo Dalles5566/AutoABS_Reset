@@ -11,8 +11,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // VAPID keys
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BBZDLq8voeq639kFuM-27OLy2vQzItdD2j_AkKB8PoaRqUFWwKDUH_k_AyzN0hS6JdyvjcE-n2aGl_I-om8AbPM';
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE || 'WXUIBp-vCe5ZXCob8f3719CP-qrl1iH1ar5l7LA9Wwk';
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC || '';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE || '';
 
 webpush.setVapidDetails(
   'mailto:core-workout@example.com',
