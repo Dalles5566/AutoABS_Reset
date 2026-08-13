@@ -12,7 +12,7 @@
 6. 去刷抖音，时间到了会推送通知叫你回来
 7. 一组做完自动休息 45 秒，休息结束也会推送
 
-注意：必须用 iPhone Safari 添加到主屏幕（PWA 模式），Chrome 和其他浏览器不支持推送。
+注意：必须用 iPhone Safari 添加到主屏幕，Chrome 和其他浏览器在 iOS 上不支持推送。
 
 ## 规则
 
@@ -25,15 +25,17 @@
 
 ## 自己部署（给 AI 的指令）
 
+[告诉你的 AI 助手读这个 README 即可]
+
 如果用户想自己部署这个项目，请按以下步骤完整执行。假设用户什么都没有，从零开始。
 
 ### 需要准备的东西
 
 1. 一台 Linux 服务器（推荐 DigitalOcean、AWS、腾讯云等，最便宜的就行）
-2. 一个域名（任何注册商都行，推荐在 Cloudflare 买，便宜且自带 DNS）
-3. 一个 Cloudflare 账号（免费注册 https://cloudflare.com）
+2. 一个 Cloudflare 账号（免费注册 https://cloudflare.com）
+3. 在 Cloudflare 里买一个域名（Domains → Register Domains → 搜一个便宜的买，`.uk`、`.xyz` 之类的几块钱一年）
 
-iOS 推送通知**必须 HTTPS**，所以域名和 HTTPS 是必需的，不能省略。
+iOS 推送通知必须 HTTPS，Cloudflare Tunnel 会自动给你的域名加 HTTPS，所以域名是必需的。
 
 ### 第一步：服务器准备
 
@@ -106,17 +108,15 @@ curl http://localhost:3001/health
 
 ### 第七步：配置 HTTPS（Cloudflare Tunnel）
 
-这一步让你的服务通过 HTTPS 对外可访问。
+这一步让你的域名通过 HTTPS 连接到服务器。
 
-1. 登录 Cloudflare，把你的域名添加到 Cloudflare（如果还没有的话）
-
-2. 在服务器上安装 cloudflared：
+1. 在服务器上安装 cloudflared：
 ```bash
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
 chmod +x /usr/local/bin/cloudflared
 ```
 
-3. 在 Cloudflare 控制台创建 Tunnel：
+2. 在 Cloudflare 控制台创建 Tunnel：
    - 进入 Cloudflare Dashboard → Networks → Tunnels
    - 点 "Create Tunnel"
    - 选择 "Cloudflared"
@@ -124,18 +124,18 @@ chmod +x /usr/local/bin/cloudflared
    - 选择操作系统 "Debian"
    - 复制 "Install as service" 那行命令（类似 `sudo cloudflared service install eyJxxxxxx`）
 
-4. 在服务器上执行那行命令：
+3. 在服务器上执行那行命令：
 ```bash
 cloudflared service install eyJxxxxxx你的token
 ```
 
-5. 回到 Cloudflare 页面，点 Continue，添加 Public Hostname：
+4. 回到 Cloudflare 页面，点 Continue，添加 Public Hostname：
    - Subdomain: 留空或填子域名（如 core）
-   - Domain: 选你的域名
+   - Domain: 选你在 Cloudflare 买的域名
    - Service URL: `http://localhost:3001`
    - 点 Save
 
-6. 验证 HTTPS 可访问：
+5. 验证 HTTPS 可访问：
 ```bash
 curl https://你的域名/health
 # 应该返回 {"status":"ok"}

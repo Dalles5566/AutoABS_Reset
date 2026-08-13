@@ -13,7 +13,7 @@ A core workout app. Randomly generates a training plan each time you open it. Ta
 7. You'll get a push notification when time's up
 8. After completing a group, 45-second rest starts automatically with another push when done
 
-Note: Must use iPhone Safari + Add to Home Screen (PWA mode). Chrome and other browsers don't support push notifications on iOS.
+Note: Must use iPhone Safari and add to Home Screen. Chrome and other browsers don't support push notifications on iOS.
 
 ## Rules
 
@@ -26,15 +26,17 @@ Note: Must use iPhone Safari + Add to Home Screen (PWA mode). Chrome and other b
 
 ## Self-Deploy (Instructions for AI)
 
+[Just tell your AI assistant to read this README]
+
 If the user wants to deploy their own instance, follow these steps from scratch. Assume nothing is set up.
 
-### Prerequisites
+### What You Need
 
 1. A Linux server (DigitalOcean, AWS, any VPS — cheapest tier is fine)
-2. A domain name (any registrar works, Cloudflare recommended for built-in DNS)
-3. A Cloudflare account (free at https://cloudflare.com)
+2. A Cloudflare account (free at https://cloudflare.com)
+3. Buy a domain in Cloudflare (Domains → Register Domains → search for a cheap one, `.uk`, `.xyz` etc. are a few dollars per year)
 
-iOS push notifications **require HTTPS**, so a domain + HTTPS is mandatory.
+iOS push notifications require HTTPS. Cloudflare Tunnel automatically adds HTTPS to your domain, so a domain is mandatory.
 
 ### Step 1: Server Setup
 
@@ -107,17 +109,15 @@ curl http://localhost:3001/health
 
 ### Step 7: Configure HTTPS (Cloudflare Tunnel)
 
-This makes your service accessible via HTTPS.
+This connects your domain to the server via HTTPS.
 
-1. Log into Cloudflare, add your domain if not already there
-
-2. Install cloudflared on the server:
+1. Install cloudflared on the server:
 ```bash
 curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
 chmod +x /usr/local/bin/cloudflared
 ```
 
-3. Create a Tunnel in Cloudflare Dashboard:
+2. Create a Tunnel in Cloudflare Dashboard:
    - Go to Networks → Tunnels
    - Click "Create Tunnel"
    - Select "Cloudflared"
@@ -125,18 +125,18 @@ chmod +x /usr/local/bin/cloudflared
    - Select OS "Debian"
    - Copy the "Install as service" command (looks like `sudo cloudflared service install eyJxxxxxx`)
 
-4. Run that command on the server:
+3. Run that command on the server:
 ```bash
 cloudflared service install eyJxxxxxx-your-token
 ```
 
-5. Back in Cloudflare, click Continue, add a Public Hostname:
+4. Back in Cloudflare, click Continue, add a Public Hostname:
    - Subdomain: leave empty or use a subdomain (e.g. `core`)
-   - Domain: select your domain
+   - Domain: select the domain you bought in Cloudflare
    - Service URL: `http://localhost:3001`
    - Click Save
 
-6. Verify HTTPS:
+5. Verify HTTPS:
 ```bash
 curl https://your-domain/health
 # Should return {"status":"ok"}
