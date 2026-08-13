@@ -189,6 +189,12 @@ const SECONDS_PER_POINT = 45; // 每组动作时间（秒）
 const REST_SECONDS = 45;      // 组间休息时间（秒）
 ```
 
+服务器端配置在 `server.js` 顶部：
+```js
+const SUBSCRIPTION_TTL_MS = 2 * 60 * 60 * 1000; // 订阅闲置多久后清理
+const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;     // 多久检查一次
+```
+
 改完后重新构建并重启：
 ```bash
 cd /opt/core-rotation
@@ -196,3 +202,18 @@ docker build -t core-rotation .
 docker stop core-rotation && docker rm core-rotation
 docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation
 ```
+
+---
+
+## 工作原理
+
+iOS 上网页切到后台后 JavaScript 会被暂停，所以倒计时不能靠前端自己发通知。做法是：
+
+1. 你点动作按钮时，前端告诉服务器"45 秒后推送给我"
+2. 你切去刷抖音，前端 JS 被 iOS 暂停
+3. 服务器照常计时，到点通过 Web Push 发通知
+4. 点通知跳回 App，前端用真实时间差（不是计数）恢复到正确状态
+
+点一组里最后一个动作时，会一次性调度两条推送（45 秒的"时间到" + 90 秒的"休息结束"），这样整个休息流程不需要你回到页面也能收到提醒。
+
+服务器按 endpoint 区分不同用户的订阅，多人用同一个部署也不会互相干扰。订阅存在内存里，每次使用会续期；服务器重启后前端会自动重新订阅。

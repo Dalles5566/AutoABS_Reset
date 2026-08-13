@@ -190,6 +190,12 @@ const SECONDS_PER_POINT = 45; // Exercise duration (seconds)
 const REST_SECONDS = 45;      // Rest between groups (seconds)
 ```
 
+Server config at the top of `server.js`:
+```js
+const SUBSCRIPTION_TTL_MS = 2 * 60 * 60 * 1000; // How long before idle subscriptions are cleaned up
+const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;     // How often to check
+```
+
 After changes, rebuild and restart:
 ```bash
 cd /opt/core-rotation
@@ -197,3 +203,18 @@ docker build -t core-rotation .
 docker stop core-rotation && docker rm core-rotation
 docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation
 ```
+
+---
+
+## How It Works
+
+On iOS, JavaScript is suspended when a web page goes to the background, so the countdown can't fire its own notification. Instead:
+
+1. When you tap an exercise, the frontend tells the server "notify me in 45 seconds"
+2. You switch to another app; iOS suspends the frontend JS
+3. The server keeps counting and sends a Web Push notification when time's up
+4. Tapping the notification brings you back, and the frontend restores the correct state using real elapsed time (not a tick counter)
+
+When you tap the last exercise of a group, two pushes are scheduled at once (the 45s "time's up" and the 90s "rest over"), so the whole rest cycle works without you returning to the page.
+
+The server keys subscriptions by endpoint, so multiple people can share one deployment without interfering. Subscriptions live in memory and are renewed on each use; after a server restart the frontend re-subscribes automatically.
