@@ -508,7 +508,6 @@
             btn.querySelector('.ex-status').textContent = `⏱ 第 ${currentSet}/${totalSets} 组 进行中...`;
 
             // 检查这是不是该组最后一个动作/最后一组
-            const group = btn.closest('.group');
             const groupButtons = group.querySelectorAll('.exercise-btn');
             const othersCompleted = Array.from(groupButtons).every(b => b === btn || b.classList.contains('completed'));
             const isLastInGroup = othersCompleted && currentSet >= totalSets;
