@@ -474,8 +474,8 @@
             // 解锁音频（iOS 要求用户交互后才能播放）
             unlockAudio();
 
-            // 如果正在休息、已完成、或正在计时中，忽略
-            if (isResting || btn.classList.contains('completed') || btn.classList.contains('running')) return;
+            // 如果正在休息、已完成、正在计时中、或有其他动作在跑，忽略
+            if (isResting || btn.classList.contains('completed') || btn.classList.contains('running') || currentRunningBtn) return;
 
             const group = btn.closest('.group');
 
