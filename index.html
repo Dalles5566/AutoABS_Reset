@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Workout Shuffler</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Core">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            color: #00d4ff;
+        }
+
+        .date-status {
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+
+        .date-status .status {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .date-status .status.done {
+            color: #4caf50;
+        }
+
+        .date-status .status.pending {
+            color: #ff9800;
+        }
+
+        /* 倒计时区域 */
+        .timer-area {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #555;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s;
+        }
+
+        .timer-display.active {
+            color: #00d4ff;
+        }
+
+        .timer-display.warning {
+            color: #ff9800;
+        }
+
+        .timer-display.done {
+            color: #4caf50;
+        }
+
+        .timer-display.resting {
+            color: #ff5722;
+        }
+
+        .timer-label {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 4px;
+            min-height: 1.5em;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 30px;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            background: #00b8e6;
+        }
+
+        #output {
+            margin: 20px auto 0;
+            max-width: 500px;
+        }
+
+        .group {
+            display: block;
+            background: #16213e;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .group.all-done {
+            opacity: 0.4;
+        }
+
+        .group-header {
+            font-size: 0.85rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* 每个动作按钮 */
+        .exercise-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            background: #1a1a2e;
+            color: #eee;
+            border: 2px solid #2a2a4a;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, opacity 0.3s;
+        }
+
+        .exercise-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .exercise-btn:active {
+            background: #222244;
+        }
+
+        .exercise-btn.running {
+            border-color: #00d4ff;
+            background: #0a2a3e;
+        }
+
+        .exercise-btn.completed {
+            border-color: #4caf50;
+            background: #1a2e1a;
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .exercise-btn.disabled {
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .exercise-btn .ex-name {
+            display: block;
+        }
+
+        .exercise-btn .ex-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exercise-btn .ex-weight {
+            font-size: 0.85rem;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+            margin-left: 8px;
+            background: #ff9800;
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        .exercise-btn .ex-note {
+            display: block;
+            font-size: 0.95rem;
+            color: #ffd700;
+            font-weight: normal;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .exercise-btn .ex-status {
+            display: block;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .exercise-btn.running .ex-status {
+            color: #00d4ff;
+        }
+
+        .exercise-btn.completed .ex-status {
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Core Workout</h1>
+    <div class="date-status" id="dateStatus"></div>
+
+    <!-- 大倒计时 -->
+    <div class="timer-area">
+        <div class="timer-display" id="timerDisplay">0:00</div>
+        <div class="timer-label" id="timerLabel"></div>
+    </div>
+
+    <button class="btn" onclick="generate()">随机生成训练计划</button>
+    <div id="output"></div>
+
+    <script>
+        const exercises = [
+            { name: "Plain", score: 1, note: "平板支撑", weight: "" },
+            { name: "Leg Raises", score: 1, note: "抬腿, 平躺, 腿放下, 腿抬起", weight: "" },
+            { name: "Side Plain 2", score: 2, note: "侧腰,平板支撑", weight: "" },
+            { name: "T cup 2", score: 2, note: "T cup", weight: "25lb" },
+            { name: "10 Pound Crunch", score: 1, note: "平躺, 手上拿着哑铃, 然后挺起", weight: "10lb" },
+            { name: "Leg Up, Crunch 2", score: 2, note: "平躺, 单腿抬起, 然后侧腰卷腹", weight: "" },
+            { name: "Cruch", score: 1, note: "平躺, 卷腹", weight: "" },
+            { name: "Flutter Kicks", score: 1, note: "平躺, 腿像自由泳那样", weight: "" },
+            { name: "Scissors Cross", score: 1, note: "平躺, 腿像剪刀那样", weight: "" },
+            { name: "Mountain Climber", score: 1, note: "", weight: "" },
+            { name: "Shoulder Tab", score: 1, note: "", weight: "" },
+            { name: "Toe Touches", score: 1, note: "", weight: "" },
+            { name: "Left Leg Right Leg Together, Turn", score: 1, note: "平躺, 抬腿并起来, 然后左右转", weight: "" },
+            { name: "Knee Hug", score: 1, note: "", weight: "" },
+            { name: "Bicycle", score: 1, note: "", weight: "" },
+            { name: "Russian Twist", score: 1, note: "俄罗斯转体", weight: "10lb" },
+            { name: "Superman", score: 1, note: "", weight: "" },
+            { name: "Left Leg Right Leg, High Five", score: 1, note: "平躺, 左右腿互换, 手掌High Five", weight: "" },
+            { name: "Hold Up 10lb, Leg Up", score: 1, note: "拿着哑铃举高头, 然后立正走", weight: "10lb" },
+            { name: "Penguin", score: 1, note: "", weight: "" },
+            { name: "Dead Bug", score: 1, note: "", weight: "" },
+            { name: "Left Right Twist", score: 1, note: "手拿着哑铃, 左右转", weight: "10lb" },
+            { name: "Toe Touch Wall, High Five", score: 1, note: "脚碰着墙, 卷腹high five", weight: "" },
+            { name: "Toe Touch Wall, Penguin", score: 1, note: "脚碰着墙, Penguin", weight: "" }
+        ];
+
+        const SECONDS_PER_POINT = 47; 
+        const REST_SECONDS = 45; // 正式用45
+        let timerInterval = null;
+        let currentRunningBtn = null;
+        let isResting = false;
+        let activeGroup = null;
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function getToday() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[d.getDay()];
+            return `${year}/${month}/${day}（周${weekday}）`;
+        }
+
+        function updateDateStatus() {
+            const total = document.querySelectorAll('.exercise-btn').length;
+            const done = document.querySelectorAll('.exercise-btn.completed').length;
+            const statusEl = document.getElementById('dateStatus');
+            const allDone = total > 0 && done === total;
+            statusEl.innerHTML = `${getToday()} <span class="status ${allDone ? 'done' : 'pending'}">${allDone ? '✅ 已完成' : `⏳ ${done}/${total}`}</span>`;
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function startTimer(seconds, exerciseName, onComplete) {
+            // 清除之前的计时器
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            let remaining = seconds;
+            const display = document.getElementById('timerDisplay');
+            const label = document.getElementById('timerLabel');
+
+            display.textContent = formatTime(remaining);
+            display.className = 'timer-display active';
+            label.textContent = exerciseName;
+
+            timerInterval = setInterval(() => {
+                remaining--;
+                display.textContent = formatTime(remaining);
+
+                if (remaining <= 5) {
+                    display.className = 'timer-display warning';
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    display.className = 'timer-display done';
+                    display.textContent = '✓';
+                    label.textContent = exerciseName + ' — 完成！';
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        function disableAllButtons() {
+            document.querySelectorAll('.exercise-btn:not(.completed)').forEach(b => {
+                b.classList.add('disabled');
+            });
+        }
+
+        function enableAllButtons() {
+            document.querySelectorAll('.exercise-btn.disabled').forEach(b => {
+                b.classList.remove('disabled');
+            });
+        }
+
+        function startRest() {
+            isResting = true;
+            disableAllButtons();
+
+            let remaining = REST_SECONDS;
+            const display = document.getElementById('timerDisplay');
+            const label = document.getElementById('timerLabel');
+
+            display.textContent = formatTime(remaining);
+            display.className = 'timer-display resting';
+            label.textContent = '🛋 休息中...';
+
+            timerInterval = setInterval(() => {
+                remaining--;
+                display.textContent = formatTime(remaining);
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isResting = false;
+                    display.textContent = '0:00';
+                    display.className = 'timer-display done';
+                    label.textContent = '休息结束，继续！';
+                    enableAllButtons();
+                }
+            }, 1000);
+        }
+
+
+        function handleExerciseClick(btn) {
+            // 如果正在休息、已完成、或正在计时中，忽略
+            if (isResting || btn.classList.contains('completed') || btn.classList.contains('running')) return;
+
+            const group = btn.closest('.group');
+
+            // 如果已经有激活的组，只能点那个组里的按钮
+            if (activeGroup && activeGroup !== group) return;
+
+            // 锁定当前组
+            if (!activeGroup) {
+                activeGroup = group;
+                // 禁用其他组的按钮
+                document.querySelectorAll('.group').forEach(g => {
+                    if (g !== activeGroup && !g.classList.contains('all-done')) {
+                        g.querySelectorAll('.exercise-btn:not(.completed)').forEach(b => b.classList.add('disabled'));
+                    }
+                });
+            }
+
+            const name = btn.dataset.name;
+            const totalSets = parseInt(btn.dataset.totalSets);
+            let currentSet = parseInt(btn.dataset.currentSet);
+
+            // 标记为正在运行
+            if (currentRunningBtn && currentRunningBtn !== btn) {
+                currentRunningBtn.classList.remove('running');
+            }
+            btn.classList.add('running');
+            currentRunningBtn = btn;
+
+            // 更新按钮状态文字
+            btn.querySelector('.ex-status').textContent = `⏱ 第 ${currentSet}/${totalSets} 组 进行中...`;
+
+            // 开始倒计时
+            startTimer(SECONDS_PER_POINT, `${name}（${currentSet}/${totalSets}）`, () => {
+                btn.classList.remove('running');
+                currentRunningBtn = null;
+
+                if (currentSet >= totalSets) {
+                    // 全部组数做完
+                    btn.classList.add('completed');
+                    btn.querySelector('.ex-status').textContent = '✓ 已完成';
+                    updateDateStatus();
+                    checkGroupDone(btn);
+                } else {
+                    // 还有下一组
+                    currentSet++;
+                    btn.dataset.currentSet = currentSet;
+                    btn.querySelector('.ex-status').textContent = `点击开始 第 ${currentSet}/${totalSets} 组`;
+                }
+            });
+        }
+
+        function checkGroupDone(btn) {
+            const group = btn.closest('.group');
+            const buttons = group.querySelectorAll('.exercise-btn');
+            const allDone = Array.from(buttons).every(b => b.classList.contains('completed'));
+            if (allDone) {
+                group.classList.add('all-done');
+                group.parentNode.appendChild(group);
+                // 解锁组限制
+                activeGroup = null;
+                // 休息开始（休息期间按钮已被 disableAllButtons 禁用）
+                startRest();
+            }
+        }
+
+        function generate() {
+            // 停止计时器
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            currentRunningBtn = null;
+            activeGroup = null;
+            isResting = false;
+            document.getElementById('timerDisplay').className = 'timer-display';
+            document.getElementById('timerDisplay').textContent = '0:00';
+            document.getElementById('timerLabel').textContent = '';
+
+            let pool2 = shuffle(exercises.filter(e => e.score === 2));
+            let pool1 = shuffle(exercises.filter(e => e.score === 1));
+
+            const groups = [];
+            let lastGroupHad2 = false;
+
+            while (pool1.length > 0 || pool2.length > 0) {
+                let group = [];
+
+                if (!lastGroupHad2 && pool2.length > 0 && pool1.length >= 1) {
+                    group.push(pool2.shift());
+                    group.push(pool1.shift());
+                    lastGroupHad2 = true;
+                } else {
+                    const take = Math.min(3, pool1.length);
+                    for (let i = 0; i < take; i++) {
+                        group.push(pool1.shift());
+                    }
+                    lastGroupHad2 = false;
+                }
+
+                if (group.length > 0) {
+                    groups.push(group);
+                }
+            }
+
+            while (pool2.length > 0) {
+                groups.push([pool2.shift()]);
+            }
+
+            const output = document.getElementById('output');
+            output.innerHTML = groups.map((group, i) => {
+                const total = group.reduce((s, e) => s + e.score, 0);
+                const buttons = group.map(e => {
+                    const totalSets = e.score;
+                    const noteHtml = e.note ? `<span class="ex-note">${e.note}</span>` : '';
+                    const weightHtml = e.weight ? `<span class="ex-weight">${e.weight}</span>` : '';
+                    return `<button class="exercise-btn" 
+                        data-name="${e.name}" 
+                        data-total-sets="${totalSets}" 
+                        data-current-set="1"
+                        onclick="handleExerciseClick(this)">
+                        <div class="ex-top">
+                            <span class="ex-name">${e.name}</span>
+                            ${weightHtml}
+                        </div>
+                        ${noteHtml}
+                        <span class="ex-status">点击开始 第 1/${totalSets} 组</span>
+                    </button>`;
+                }).join('');
+
+                return `<div class="group">
+                    <div class="group-header">第 ${i + 1} 组（${total}分）</div>
+                    ${buttons}
+                </div>`;
+            }).join('');
+
+            updateDateStatus();
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        generate();
+    </script>
+</body>
+</html>
