@@ -1,4 +1,4 @@
-const CACHE_NAME = 'core-workout-v6';
+const CACHE_NAME = 'core-workout-v7';
 const ASSETS = [
     './',
     './index.html',
@@ -23,6 +23,25 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
+    );
+});
+
+// 收到服务器推送时显示通知
+self.addEventListener('push', event => {
+    let data = { title: '🔥 Core Workout', body: '时间到！' };
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data.body = event.data.text();
+        }
+    }
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            tag: 'core-timer',
+            renotify: true
+        })
     );
 });
 
