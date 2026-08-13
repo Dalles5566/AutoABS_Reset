@@ -1,4 +1,4 @@
-const CACHE_NAME = 'core-workout-v5';
+const CACHE_NAME = 'core-workout-v6';
 const ASSETS = [
     './',
     './index.html',
@@ -23,5 +23,18 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
+    );
+});
+
+// 点击通知时跳回 App
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(clientList => {
+            if (clientList.length > 0) {
+                return clientList[0].focus();
+            }
+            return clients.openWindow('./');
+        })
     );
 });

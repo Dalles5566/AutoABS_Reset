@@ -301,7 +301,7 @@
             beep(audioCtx.currentTime + 0.5);
         }
 
-        // 系统通知
+        // 系统通知（通过 Service Worker 发送，后台也能弹）
         function requestNotificationPermission() {
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -310,7 +310,13 @@
 
         function sendNotification(title, body) {
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(title, { body: body, icon: '🔥' });
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification(title, { body: body, tag: 'core-timer' });
+                    });
+                } else {
+                    new Notification(title, { body: body });
+                }
             }
         }
 
