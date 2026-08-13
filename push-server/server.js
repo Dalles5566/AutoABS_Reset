@@ -1,10 +1,14 @@
 const express = require('express');
 const webpush = require('web-push');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// 静态文件（前端页面）
+app.use(express.static(path.join(__dirname, 'public')));
 
 // VAPID keys
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC || 'BBZDLq8voeq639kFuM-27OLy2vQzItdD2j_AkKB8PoaRqUFWwKDUH_k_AyzN0hS6JdyvjcE-n2aGl_I-om8AbPM';
