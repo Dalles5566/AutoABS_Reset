@@ -270,21 +270,34 @@
         let activeGroup = null;
 
         // 蜂鸣提示音
+        let audioCtx = null;
+
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         function playBeep() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
             function beep(time) {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(audioCtx.destination);
                 osc.frequency.value = 880;
                 gain.gain.value = 0.3;
                 osc.start(time);
                 osc.stop(time + 0.15);
             }
-            beep(ctx.currentTime);
-            beep(ctx.currentTime + 0.25);
-            beep(ctx.currentTime + 0.5);
+            beep(audioCtx.currentTime);
+            beep(audioCtx.currentTime + 0.25);
+            beep(audioCtx.currentTime + 0.5);
         }
 
         // 系统通知
@@ -413,6 +426,9 @@
 
 
         function handleExerciseClick(btn) {
+            // 解锁音频（iOS 要求用户交互后才能播放）
+            unlockAudio();
+
             // 如果正在休息、已完成、或正在计时中，忽略
             if (isResting || btn.classList.contains('completed') || btn.classList.contains('running')) return;
 
