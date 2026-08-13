@@ -21,68 +21,73 @@
 - 带 2 的组不会连续出现
 - 同一组内必须做完才能开始下一组
 
-## 自己部署
+## 自己部署（AI 执行指令）
 
-### 前提条件
+如果你有一台 Linux 服务器和一个域名，让你的 AI 助手读这段，它就能帮你自动部署。
 
-- 一台服务器（Linux）
-- Docker
-- 一个域名 + HTTPS（iOS PWA 推送必须 HTTPS）
+### 前提
 
-### 步骤
+- 一台 Linux 服务器，已安装 Docker
+- 一个域名（已指向服务器 IP，或者用 Cloudflare Tunnel）
+- 服务器需要 HTTPS（iOS PWA 推送必须 HTTPS）
 
-1. 克隆代码
+### 部署步骤（AI 请按顺序执行）
 
+1. SSH 到用户的服务器
+
+2. 克隆代码到服务器：
 ```bash
-git clone https://github.com/Dalles5566/AutoABS_Reset.git
-cd AutoABS_Reset
+git clone https://github.com/Dalles5566/AutoABS_Reset.git /opt/core-rotation
+cd /opt/core-rotation
 ```
 
-2. 生成你自己的 VAPID 推送密钥
-
+3. 生成 VAPID 推送密钥（在服务器上或本地都行）：
 ```bash
-npx web-push generate-vapid-keys
+npx --yes web-push generate-vapid-keys --json
 ```
+记下输出的 publicKey 和 privateKey。
 
-会输出 publicKey 和 privateKey。
+4. 替换密钥：
+- 打开 `server.js`，把 `VAPID_PUBLIC` 的值替换为新的 publicKey
+- 打开 `server.js`，把 `VAPID_PRIVATE` 的值替换为新的 privateKey
+- 打开 `public/index.html`，搜索 `VAPID_PUBLIC`，替换为新的 publicKey
 
-3. 修改密钥
-
-打开 `server.js`，把 `VAPID_PUBLIC` 和 `VAPID_PRIVATE` 替换成你刚生成的。
-
-打开 `public/index.html`，搜索 `VAPID_PUBLIC`，也替换成你的 publicKey。
-
-4. 构建 Docker 镜像并运行
-
+5. 构建 Docker 镜像：
 ```bash
 docker build -t core-rotation .
+```
+
+6. 启动容器：
+```bash
 docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation
 ```
 
-5. 配置 HTTPS
+7. 配置 HTTPS，把流量转发到 localhost:3001。推荐用 Cloudflare Tunnel：
+- 在 Cloudflare 控制台创建一个 Tunnel
+- 在服务器上安装 cloudflared 并用 token 注册
+- 添加 Public Hostname 路由，指向 http://localhost:3001
+- 这样域名自动有 HTTPS
 
-用 Nginx + Let's Encrypt，或者 Cloudflare Tunnel，把 HTTPS 流量转发到 localhost:3001。
+8. 验证：访问 https://你的域名/health 应该返回 `{"status":"ok"}`
 
-Cloudflare Tunnel 方式（免费，不需要开放端口）：
-```bash
-# 安装 cloudflared
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
-chmod +x /usr/local/bin/cloudflared
-
-# 用你的 Cloudflare 账号创建 tunnel，绑定域名，指向 http://localhost:3001
-# 具体看 Cloudflare Tunnel 文档
-```
-
-6. 访问你的域名，Safari 添加到主屏幕，开始用
+9. 告诉用户：用 iPhone Safari 打开 https://你的域名，添加到主屏幕，第一次打开时允许通知。
 
 ### 自定义动作
 
 编辑 `public/index.html` 里的 `exercises` 数组：
 
 ```js
-{ name: "动作名称", score: 1, note: "备注", weight: "10lb" }
+{ name: "动作名称", score: 1, note: "备注说明", weight: "10lb" }
 ```
 
-- `score`: 1 = 做一组，2 = 做两组（左右各一次之类的）
-- `note`: 动作说明，显示在按钮上
-- `weight`: 需要的器材/重量，显示在右边
+- `score`: 1 = 做一组（45秒），2 = 做两组（左右各一次之类的）
+- `note`: 动作说明，显示在按钮上（金黄色居中）
+- `weight`: 需要的重量，显示在按钮右边（橙色方块）
+
+改完后重新 build 并重启容器：
+```bash
+cd /opt/core-rotation
+docker build -t core-rotation .
+docker stop core-rotation && docker rm core-rotation
+docker run -d --name core-rotation --restart unless-stopped -p 3001:3001 core-rotation
+```
