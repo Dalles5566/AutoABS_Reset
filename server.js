@@ -30,13 +30,34 @@ webpush.setVapidDetails(
 );
 
 // 存储订阅信息（按 endpoint 区分不同用户）
+// 滑动过期：每次用到就续期，闲置超过 TTL 才清理
+const SUBSCRIPTION_TTL_MS = 2 * 60 * 60 * 1000; // 2 小时
+const CLEANUP_INTERVAL_MS = 10 * 60 * 1000;     // 每 10 分钟清理一次
 const subscriptions = new Map();
+
+// 定期清理闲置订阅
+setInterval(() => {
+  const now = Date.now();
+  let removed = 0;
+  for (const [endpoint, entry] of subscriptions) {
+    if (now - entry.lastUsed > SUBSCRIPTION_TTL_MS) {
+      subscriptions.delete(endpoint);
+      removed++;
+    }
+  }
+  if (removed > 0) {
+    console.log(`Cleaned up ${removed} idle subscription(s), ${subscriptions.size} remaining`);
+  }
+}, CLEANUP_INTERVAL_MS);
 
 // 注册推送订阅
 app.post('/subscribe', (req, res) => {
   const sub = req.body;
-  subscriptions.set(sub.endpoint, sub);
-  console.log('Push subscription registered:', sub.endpoint.slice(0, 80));
+  if (!sub || !sub.endpoint) {
+    return res.status(400).json({ error: 'Invalid subscription' });
+  }
+  subscriptions.set(sub.endpoint, { sub, lastUsed: Date.now() });
+  console.log('Push subscription registered:', sub.endpoint.slice(0, 80), `(total: ${subscriptions.size})`);
   res.json({ success: true });
 });
 
@@ -44,10 +65,14 @@ app.post('/subscribe', (req, res) => {
 app.post('/notify', (req, res) => {
   const { delay, title, body, endpoint } = req.body;
 
-  const subscription = subscriptions.get(endpoint);
-  if (!subscription) {
+  const entry = subscriptions.get(endpoint);
+  if (!entry) {
     return res.status(400).json({ error: 'No subscription found for this endpoint' });
   }
+
+  // 续期
+  entry.lastUsed = Date.now();
+  const subscription = entry.sub;
 
   const delayMs = (delay || 45) * 1000;
 
