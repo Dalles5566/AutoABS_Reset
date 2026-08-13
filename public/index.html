@@ -336,6 +336,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sub)
             });
+            // 保存 endpoint 用于后续 notify 请求
+            window._pushEndpoint = sub.endpoint;
             console.log('Push subscription registered');
         }
 
@@ -343,7 +345,7 @@
             fetch(PUSH_SERVER + '/notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ delay, title, body })
+                body: JSON.stringify({ delay, title, body, endpoint: window._pushEndpoint })
             }).catch(err => console.error('Failed to schedule push:', err));
         }
 

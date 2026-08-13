@@ -29,22 +29,24 @@ webpush.setVapidDetails(
   VAPID_PRIVATE
 );
 
-// 存储订阅信息（内存即可，只有你一个人用）
-let subscription = null;
+// 存储订阅信息（按 endpoint 区分不同用户）
+const subscriptions = new Map();
 
 // 注册推送订阅
 app.post('/subscribe', (req, res) => {
-  subscription = req.body;
-  console.log('Push subscription registered:', JSON.stringify(subscription).slice(0, 200));
+  const sub = req.body;
+  subscriptions.set(sub.endpoint, sub);
+  console.log('Push subscription registered:', sub.endpoint.slice(0, 80));
   res.json({ success: true });
 });
 
 // 设置定时推送
 app.post('/notify', (req, res) => {
-  const { delay, title, body } = req.body;
+  const { delay, title, body, endpoint } = req.body;
 
+  const subscription = subscriptions.get(endpoint);
   if (!subscription) {
-    return res.status(400).json({ error: 'No subscription registered' });
+    return res.status(400).json({ error: 'No subscription found for this endpoint' });
   }
 
   const delayMs = (delay || 45) * 1000;
@@ -56,8 +58,14 @@ app.post('/notify', (req, res) => {
     });
 
     webpush.sendNotification(subscription, payload)
-      .then(() => console.log('Push sent successfully to:', subscription.endpoint))
-      .catch(err => console.error('Push failed:', err.statusCode, err.body));
+      .then(() => console.log('Push sent to:', endpoint.slice(0, 80)))
+      .catch(err => {
+        console.error('Push failed:', err.statusCode, err.body);
+        // 如果推送失败（过期了），移除该订阅
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          subscriptions.delete(endpoint);
+        }
+      });
   }, delayMs);
 
   res.json({ success: true, willNotifyIn: delay });
