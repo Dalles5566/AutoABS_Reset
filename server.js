@@ -2,6 +2,8 @@ const express = require('express');
 const webpush = require('web-push');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const yaml = require('js-yaml');
 
 const app = express();
 app.use(cors());
@@ -10,9 +12,16 @@ app.use(express.json());
 // 静态文件（前端页面）
 app.use(express.static(path.join(__dirname, 'public')));
 
-// VAPID keys
-const VAPID_PUBLIC = process.env.VAPID_PUBLIC || '';
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE || '';
+// 读取配置
+let config = {};
+try {
+  config = yaml.load(fs.readFileSync(path.join(__dirname, 'config.yml'), 'utf8'));
+} catch (e) {
+  console.log('No config.yml found, using env vars');
+}
+
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC || config.vapid_public || '';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE || config.vapid_private || '';
 
 webpush.setVapidDetails(
   'mailto:core-workout@example.com',
