@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fishing Checklist</title>
+    <title>出海前准备</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Fishing">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="出海">
     <style>
         * {
             margin: 0;
@@ -17,8 +17,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
+            background: #cfe8ff;
+            color: #1a2733;
             min-height: 100vh;
             padding: 20px;
         }
@@ -27,7 +27,7 @@
             text-align: center;
             font-size: 1.8rem;
             margin-bottom: 2px;
-            color: #00d4ff;
+            color: #0069c0;
         }
 
         h2 {
@@ -35,14 +35,14 @@
             font-size: 1.05rem;
             font-weight: 600;
             margin-bottom: 12px;
-            color: #aaa;
+            color: #4a6072;
         }
 
         .date-status {
             text-align: center;
             font-size: 1rem;
             margin-bottom: 20px;
-            color: #aaa;
+            color: #4a6072;
         }
 
         .date-status .status {
@@ -51,11 +51,11 @@
         }
 
         .date-status .status.done {
-            color: #4caf50;
+            color: #2e7d32;
         }
 
         .date-status .status.pending {
-            color: #ff9800;
+            color: #e07000;
         }
 
         .top-links {
@@ -66,17 +66,17 @@
         }
 
         .top-links a {
-            color: #00d4ff;
+            color: #0069c0;
             text-decoration: none;
             font-size: 0.95rem;
-            border: 1px solid #2a2a4a;
+            border: 1px solid #9dc7ea;
             padding: 8px 16px;
             border-radius: 10px;
             transition: background 0.2s;
         }
 
         .top-links a:active {
-            background: #16213e;
+            background: #b8dbf7;
         }
 
         .btn {
@@ -87,8 +87,8 @@
             padding: 16px;
             font-size: 1.2rem;
             font-weight: bold;
-            background: #00d4ff;
-            color: #1a1a2e;
+            background: #0091ea;
+            color: #fff;
             border: none;
             border-radius: 12px;
             cursor: pointer;
@@ -97,17 +97,17 @@
 
         .btn:active {
             transform: scale(0.96);
-            background: #00b8e6;
+            background: #0077c2;
         }
 
         .btn.secondary {
-            background: #16213e;
-            color: #00d4ff;
-            border: 2px solid #2a2a4a;
+            background: #eaf4fd;
+            color: #0069c0;
+            border: 2px solid #9dc7ea;
         }
 
         .btn.secondary:active {
-            background: #1a1a2e;
+            background: #d7ebfb;
         }
 
         #output {
@@ -117,20 +117,21 @@
 
         .group {
             display: block;
-            background: #16213e;
+            background: #ffffff;
             border-radius: 12px;
             margin-bottom: 16px;
             padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 60, 120, 0.1);
             transition: opacity 0.3s;
         }
 
         .group.all-done {
-            opacity: 0.4;
+            opacity: 0.45;
         }
 
         .group-header {
             font-size: 0.85rem;
-            color: #00d4ff;
+            color: #0069c0;
             margin-bottom: 10px;
             font-weight: bold;
         }
@@ -138,8 +139,8 @@
         /* 子分组 */
         .subgroup {
             display: block;
-            background: #12192e;
-            border: 1px solid #2a2a4a;
+            background: #f2f8fe;
+            border: 1px solid #cfe3f5;
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 12px;
@@ -151,12 +152,12 @@
         }
 
         .subgroup.all-done {
-            opacity: 0.4;
+            opacity: 0.45;
         }
 
         .subgroup-header {
             font-size: 0.8rem;
-            color: #7fdfff;
+            color: #0077c2;
             margin-bottom: 8px;
             font-weight: bold;
         }
@@ -170,9 +171,9 @@
             font-size: 1.05rem;
             font-weight: 600;
             text-align: left;
-            background: #1a1a2e;
-            color: #eee;
-            border: 2px solid #2a2a4a;
+            background: #ffffff;
+            color: #1a2733;
+            border: 2px solid #d5e6f4;
             border-radius: 10px;
             cursor: pointer;
             transition: border-color 0.2s, background 0.2s, opacity 0.3s;
@@ -183,13 +184,13 @@
         }
 
         .item-btn:active {
-            background: #222244;
+            background: #eaf4fd;
         }
 
         .item-btn.completed {
-            border-color: #4caf50;
-            background: #1a2e1a;
-            opacity: 0.5;
+            border-color: #66bb6a;
+            background: #eafaeb;
+            opacity: 0.6;
         }
 
         .item-btn .item-top {
@@ -204,18 +205,18 @@
 
         .item-btn .item-check {
             font-size: 1.2rem;
-            color: #555;
+            color: #b0c4d4;
             margin-left: 8px;
         }
 
         .item-btn.completed .item-check {
-            color: #4caf50;
+            color: #2e7d32;
         }
 
         .item-btn .item-note {
             display: block;
             font-size: 0.9rem;
-            color: #ffd700;
+            color: #c26a00;
             font-weight: normal;
             margin-top: 4px;
         }
@@ -223,89 +224,80 @@
 </head>
 <body>
     <h1>出海</h1>
-    <h2>出门前准备</h2>
+    <h2>出海前准备</h2>
     <div class="date-status" id="dateStatus"></div>
 
     <div class="top-links">
-        <a href="index.html">← 回训练</a>
-        <a href="sailing.html">⛵ 出海</a>
+        <a href="index.html">🔥 训练</a>
+        <a href="fishing.html">🎣 钓鱼清单</a>
     </div>
 
     <button class="btn secondary" onclick="resetAll()">重置清单</button>
     <div id="output"></div>
 
     <script>
-        // 钓鱼前清单，分组管理。note 为可选备注。
-        const groups = [
-            {
-                title: "防水袋",
-                subgroups: [
-                    {
-                        title: "防水袋-----Main",
-                        items: [
-                            { name: "🦺Life Jacket🦺", note: "🦺🦺🦺救生衣🦺🦺🦺"},
-                            { name: "NorthFace", note: "防风防水外套"},
-                            { name: "必须挂着-Whistler", note: "口哨" },
-                            { name: "必须挂着-Compass", note: "指南针" },
-                            { name: "Food", note: "🍔🍔🍔食物🍔🍔🍔" },
-                            { name: "Water", note: "🥤🥤🥤水🥤🥤🥤" },
-                            { name: "WaterProof Phone Case", note: "防水手机壳" },
-                            { name: "Air Pump", note: "船用主充气泵" },
-                            { name: "Sun Screen", note: "防晒霜" },
-                            { name: "🐟🐟🐟TackleBox", note: "鱼钩工具箱" },
-                            { name: "🐟🐟🐟鱼线", note: "鱼线" },
-                            { name: "🐟🐟🐟Hooks Pack", note: "组装好的鱼钩线" },
-                        ]
-                    },
-                    {
-                        title: "防水袋-----Fish",
-                        items: [
-                            { name: "Weight", note: "铅" },
-                            { name: "Fishing Hook Remover", note: "取钩器" } ,
-                            { name: "Scissors", note: "✂️✂️✂️剪刀✂️✂️✂️" },
-                        ]
-                    }
-                ]
-            },
-            {
-            title: "钓鱼桶-----里面该有的东西",
-                items: [
-                    { name: "Fish Box", note: "钓鱼桶, 同时当Bailer"},
-                    { name: "装鱼箱 Air Pump", note: "增氧泵" },               
-                    { name: "bait 1", note: "鱿鱼" },
-                    { name: "bait 2", note: "小蟹" },
-                    { name: "bait 3", note: "假饵" },
-                ]
-            },
-            {
-                title: "上车前-----检查",
-                items: [
-                    { name: "Iphone", note: "手机" },
-                    { name: "Car Key", note: "车钥匙" }, 
-                    { name: "Fishing Rod", note: "鱼竿" },
-                    { name: "Sun Glass", note: "太阳镜" },
-                    { name: "Sun Hat", note: "太阳帽" },
-                    { name: "Floating Bag", note: "防水袋" },
-                    { name: "Fishing Box", note: "钓鱼桶" },
-                ]
-            },
-            {
-                title: "在Uda家",
-                items: [
-                    { name: "Aircat355", note: "气垫船" },
-                    { name: "Paddles", note: "桨" },
-                    { name: "Mercury 3.5", note: "马达" },
-                    { name: "Kill Switch Lanyard", note: "马达熄火绳" },
-                    { name: "Extra Fuel", note: "额外油桶 + 确认有油" },
-                    { name: "Anchor", note: "锚" },
-                    { name: "Anchor Rope", note: "锚绳" }
-                ]
-            }
+        // 出海前准备清单，分组管理。
+        // 普通组用 items；带子分组的组用 subgroups（每个子组有 title + items）。
+        const groups = 
+        [
+                {
+                    title: "① 组装充气艇",
+                    items: [
+                        { name: "给『充气艇』打气", note: "给『充气艇』打气" },
+                        { name: "安装『Paddles』", note: "把桨安装/放到船上" }
+                    ]
+                },
+                {
+                    title: "② 安装动力",
+                    items: [
+                        { name: "安装『Mercury 3.5』", note: "把马达安装到船尾并锁紧" },
+                        { name: "确认『Fuel』", note: "确认马达主油箱有油" }
+                    ]
+                },
+                {
+                    title: "③ 整理船上装备",
+                    items: [
+                        { name: "『Anchor』放进【Floating Bag】", note: "锚放进防水袋" },
+                        { name: "『Anchor Rope』放进【Floating Bag】", note: "锚绳放进防水袋" },
+                        { name: "『Extra Fuel』放上船", note: "备用油固定好" },
+                        { name: "『Fishing Rod』放上船", note: "鱼竿放上船" },
+                        { name: "『Fishing Box』放上船", note: "钓鱼桶放上船" }
+                    ]
+                },
+                {
+                    title: "④ 收拾岸上装备",
+                    items: [
+                        { name: "『Air Pump』放回【车里】", note: "气泵放回车里" }
+                    ]
+                },
+                {
+                    title: "⑤ 处理随身物品",
+                    items: [
+                        { name: "『iPhone』放进【Waterproof Phone Case】", note: "手机防水" },
+                        { name: "『Car Key』放进【Floating Bag】", note: "车钥匙防水保存" },
+                        { name: "戴上『Sun Hat』", note: "太阳帽" },
+                        { name: "戴上『Sunglasses』", note: "太阳镜" }
+                    ]
+                },
+                {
+                    title: "⑥ 准备上船",
+                    items: [
+                        { name: "穿上🦺『Life Jacket』🦺", note: "救生衣穿好并扣紧" },
+                        { name: "确认『Whistle + Compass』", note: "确认都挂在救生衣上" },
+                        { name: "『Floating Bag』放上船", note: "防水袋放上船并固定" }
+                    ]
+                },
+                {
+                    title: "⑦ 启航前最后一步",
+                    items: [
+                        { name: "连接『Kill Switch Lanyard』", note: "熄火绳连接到身上" }
+                    ]
+                }
         ];
 
-        const STORAGE_KEY = 'fishing-checklist-state';
+        const STORAGE_KEY = 'sailing-checklist-state';
 
-        // 读取保存的完成状态：{ "组标题::项名": true }
+        // 读取保存的完成状态：{ "组标题::项名" 或 "组::子组::项名": true }
         function loadState() {
             try {
                 return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -320,8 +312,8 @@
 
         let state = loadState();
 
-        function itemKey(groupTitle, name) {
-            return groupTitle + '::' + name;
+        function itemKey(scope, name) {
+            return scope + '::' + name;
         }
 
         function getToday() {
@@ -377,7 +369,6 @@
         // 优先滚到「当前大组内」下一个未完成的子组；
         // 若当前大组已全部完成，则滚到下一个未完成的大组。
         function scrollToNextPending(currentGroupEl) {
-            // 1. 当前大组内还有没完成的子组 -> 滚到那个子组
             if (currentGroupEl && !currentGroupEl.classList.contains('all-done')) {
                 const nextSub = Array.from(currentGroupEl.querySelectorAll('.subgroup'))
                     .find(s => !s.classList.contains('all-done'));
@@ -386,7 +377,6 @@
                     return;
                 }
             }
-            // 2. 否则滚到下一个未完成的大组
             const nextGroup = Array.from(document.querySelectorAll('.group'))
                 .find(g => !g.classList.contains('all-done'));
             if (nextGroup) {
