@@ -130,7 +130,8 @@
         }
 
         .group-header {
-            font-size: 0.85rem;
+            font-size: 1.8rem;
+            text-align: center;
             color: #0069c0;
             margin-bottom: 10px;
             font-weight: bold;
@@ -296,17 +297,27 @@
 
         const STORAGE_KEY = 'sailing-checklist-state';
 
-        // 读取保存的完成状态：{ "组标题::项名" 或 "组::子组::项名": true }
+        // 当前美东时间（自动处理夏令时）的日期字符串，如 "2026-09-01"
+        function getEstDate() {
+            return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+        }
+
+        // 读取完成状态。存储结构：{ estDate: "2026-09-01", state: {"组::项": true} }
+        // 若保存时的美东日期与今天不同（跨过美东午夜），自动重置为空。
         function loadState() {
             try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+                const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (!raw || raw.estDate !== getEstDate()) {
+                    return {};
+                }
+                return raw.state || {};
             } catch (e) {
                 return {};
             }
         }
 
         function saveState(state) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ estDate: getEstDate(), state }));
         }
 
         let state = loadState();
@@ -474,6 +485,18 @@
             saveState(state);
             render();
         }
+
+        // 页面一直开着也能在美东午夜自动重置：每分钟检查一次日期是否变了
+        let currentEstDate = getEstDate();
+        setInterval(() => {
+            const today = getEstDate();
+            if (today !== currentEstDate) {
+                currentEstDate = today;
+                state = {};
+                saveState(state);
+                render();
+            }
+        }, 60 * 1000);
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
