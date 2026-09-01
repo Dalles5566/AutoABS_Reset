@@ -127,6 +127,32 @@
             font-weight: bold;
         }
 
+        /* 子分组 */
+        .subgroup {
+            display: block;
+            background: #12192e;
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: opacity 0.3s;
+        }
+
+        .subgroup:last-child {
+            margin-bottom: 0;
+        }
+
+        .subgroup.all-done {
+            opacity: 0.4;
+        }
+
+        .subgroup-header {
+            font-size: 0.8rem;
+            color: #7fdfff;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
         /* 每个清单项按钮 */
         .item-btn {
             display: block;
@@ -208,32 +234,37 @@
                 ]
             },
             {
-                title: "防水袋-Main",
-                items: [
-                    { name: "必须挂着-Whistler", note: "口哨" },
-                    { name: "必须挂着-Compass", note: "Compa指南针" },
-                    { name: "Food", note: "食物" },
-                    { name: "Water", note: "水" },
-                    { name: "WaterProof Phone Case", note: "防水手机壳"},
-                    { name: "Air Pump", note: "船用主充气泵"},
-                    { name: "Sun Glass", note: "太阳镜"},
-                    { name: "Sun Hat", note: "太阳帽"},
-                    { name: "Sun Screen", note: "防晒霜"},
+                title: "防水袋",
+                subgroups: [
+                    {
+                        title: "防水袋-----Main",
+                        items: [
+                            { name: "必须挂着-Whistler", note: "口哨" },
+                            { name: "必须挂着-Compass", note: "Compa指南针" },
+                            { name: "Food", note: "食物" },
+                            { name: "Water", note: "水" },
+                            { name: "WaterProof Phone Case", note: "防水手机壳" },
+                            { name: "Air Pump", note: "船用主充气泵" },
+                            { name: "Sun Glass", note: "太阳镜" },
+                            { name: "Sun Hat", note: "太阳帽" },
+                            { name: "Sun Screen", note: "防晒霜" }
+                        ]
+                    },
+                    {
+                        title: "防水袋-----Fish",
+                        items: [
+                            { name: "鱼线", note: "鱼线" },
+                            { name: "Hooks Pack", note: "组装好的鱼钩线" },
+                            { name: "Weight", note: "铅" },
+                            { name: "TackleBox", note: "鱼钩工具箱" },
+                            { name: "✂️✂️✂️✂️", note: "剪刀" },
+                            { name: "Fishing Hook Remover", note: "取钩器" }
+                        ]
+                    }
                 ]
             },
             {
-                title: "防水袋-Fish",
-                items: [
-                    { name: "鱼线", note: "鱼线" },
-                    { name: "Hooks Pack", note: "组装好的鱼钩线" },
-                    { name: "Weight", note: "铅" },
-                    { name: "TackleBox", note: "鱼钩工具箱" },
-                    { name: "✂️✂️✂️✂️", note: "剪刀" },
-                    { name: "Fishing Hook Remover", note: "取钩器" }
-                ]
-            },
-            {
-            title: "钓鱼相关",
+            title: "钓鱼桶-----里面该有的东西",
                 items: [
                     { name: "Fishing Rod", note: "鱼竿" },
                     { name: "Fish Box", note: "钓鱼桶, 同时当Bailer"},
@@ -303,20 +334,47 @@
             statusEl.innerHTML = `${getToday()} <span class="status ${allDone ? 'done' : 'pending'}">${allDone ? '✅ 都齐了' : `⏳ ${done}/${total}`}</span>`;
         }
 
-        // 一组全部完成后，把该组沉底
+        // 某个容器（子组或大组）里的项是否全部完成
+        function isContainerDone(el) {
+            const buttons = el.querySelectorAll('.item-btn');
+            return buttons.length > 0 && Array.from(buttons).every(b => b.classList.contains('completed'));
+        }
+
+        // 子组全部完成 -> 沉到所属大组内的底部
+        function checkSubgroupDone(subEl) {
+            if (!subEl) return;
+            if (isContainerDone(subEl)) {
+                subEl.classList.add('all-done');
+                subEl.parentNode.appendChild(subEl);
+            } else {
+                subEl.classList.remove('all-done');
+            }
+        }
+
+        // 大组全部完成 -> 沉到最外层底部。返回该组是否已完成
         function checkGroupDone(groupEl) {
-            const buttons = groupEl.querySelectorAll('.item-btn');
-            const allDone = Array.from(buttons).every(b => b.classList.contains('completed'));
+            const allDone = isContainerDone(groupEl);
             if (allDone) {
                 groupEl.classList.add('all-done');
                 groupEl.parentNode.appendChild(groupEl);
             } else {
                 groupEl.classList.remove('all-done');
             }
+            return allDone;
+        }
+
+        // 滚动到第一个还没完成的大组
+        function scrollToNextPending() {
+            const next = Array.from(document.querySelectorAll('.group'))
+                .find(g => !g.classList.contains('all-done'));
+            if (next) {
+                next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         function handleItemClick(btn) {
             const groupEl = btn.closest('.group');
+            const subEl = btn.closest('.subgroup');
             const isCompleted = btn.classList.toggle('completed');
             btn.querySelector('.item-check').textContent = isCompleted ? '✓' : '○';
 
@@ -330,34 +388,61 @@
             saveState(state);
 
             updateDateStatus();
-            checkGroupDone(groupEl);
+
+            // 先处理子组沉底，再看大组是否整体完成
+            checkSubgroupDone(subEl);
+            const groupJustDone = checkGroupDone(groupEl);
+
+            // 大组刚刚全部完成 -> 自动滚到下一个未完成的组
+            if (groupJustDone) {
+                setTimeout(scrollToNextPending, 350);
+            }
         }
 
         function render() {
             const output = document.getElementById('output');
+
+            // 渲染单个清单项按钮。keyScope 用于生成唯一 key（大组标题或大组::子组）
+            function renderItem(keyScope, item) {
+                const key = itemKey(keyScope, item.name);
+                const done = !!state[key];
+                const noteHtml = item.note ? `<span class="item-note">${item.note}</span>` : '';
+                return `<button class="item-btn ${done ? 'completed' : ''}"
+                    data-key="${key}"
+                    onclick="handleItemClick(this)">
+                    <div class="item-top">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-check">${done ? '✓' : '○'}</span>
+                    </div>
+                    ${noteHtml}
+                </button>`;
+            }
+
             output.innerHTML = groups.map(group => {
-                const buttons = group.items.map(item => {
-                    const key = itemKey(group.title, item.name);
-                    const done = !!state[key];
-                    const noteHtml = item.note ? `<span class="item-note">${item.note}</span>` : '';
-                    return `<button class="item-btn ${done ? 'completed' : ''}"
-                        data-key="${key}"
-                        onclick="handleItemClick(this)">
-                        <div class="item-top">
-                            <span class="item-name">${item.name}</span>
-                            <span class="item-check">${done ? '✓' : '○'}</span>
-                        </div>
-                        ${noteHtml}
-                    </button>`;
-                }).join('');
+                let body;
+                if (group.subgroups) {
+                    // 带子分组的大组
+                    body = group.subgroups.map(sub => {
+                        const scope = group.title + '::' + sub.title;
+                        const items = sub.items.map(item => renderItem(scope, item)).join('');
+                        return `<div class="subgroup">
+                            <div class="subgroup-header">${sub.title}</div>
+                            ${items}
+                        </div>`;
+                    }).join('');
+                } else {
+                    // 普通组
+                    body = group.items.map(item => renderItem(group.title, item)).join('');
+                }
 
                 return `<div class="group">
                     <div class="group-header">${group.title}</div>
-                    ${buttons}
+                    ${body}
                 </div>`;
             }).join('');
 
-            // 已经全完成的组，初始就沉底
+            // 已经全完成的子组/大组，初始就沉底
+            document.querySelectorAll('.subgroup').forEach(s => checkSubgroupDone(s));
             document.querySelectorAll('.group').forEach(g => checkGroupDone(g));
             updateDateStatus();
         }
