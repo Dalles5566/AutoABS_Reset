@@ -222,13 +222,12 @@
     </style>
 </head>
 <body>
-    <h1>出海</h1>
+    <h1>🏖️ 出门 🏖️ </h1>
     <h2>出门前准备</h2>
     <div class="date-status" id="dateStatus"></div>
 
     <div class="top-links">
-        <a href="index.html">← 回训练</a>
-        <a href="sailing.html">⛵ 出海</a>
+        <a href="sailing.html">🛥️🛥️🛥️ 出海 🛥️🛥️🛥️</a>
     </div>
 
     <button class="btn secondary" onclick="resetAll()">重置清单</button>
@@ -376,13 +375,20 @@
         // 滚动到下一个还没完成的目标：
         // 优先滚到「当前大组内」下一个未完成的子组；
         // 若当前大组已全部完成，则滚到下一个未完成的大组。
+        // 把目标元素滚到距屏幕顶部约 20% 的位置（比顶到最上边舒服，又不至于太靠下）
+        function scrollToElement(el) {
+            const offset = window.innerHeight * 0.2;
+            const top = el.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+
         function scrollToNextPending(currentGroupEl) {
             // 1. 当前大组内还有没完成的子组 -> 滚到那个子组
             if (currentGroupEl && !currentGroupEl.classList.contains('all-done')) {
                 const nextSub = Array.from(currentGroupEl.querySelectorAll('.subgroup'))
                     .find(s => !s.classList.contains('all-done'));
                 if (nextSub) {
-                    nextSub.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    scrollToElement(nextSub);
                     return;
                 }
             }
@@ -390,7 +396,7 @@
             const nextGroup = Array.from(document.querySelectorAll('.group'))
                 .find(g => !g.classList.contains('all-done'));
             if (nextGroup) {
-                nextGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                scrollToElement(nextGroup);
             }
         }
 
