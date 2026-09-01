@@ -167,15 +167,15 @@
         .item-btn {
             display: block;
             width: 100%;
-            padding: 14px 16px;
-            margin-bottom: 8px;
-            font-size: 1.05rem;
+            padding: 22px 20px;
+            margin-bottom: 12px;
+            font-size: 1.25rem;
             font-weight: 600;
             text-align: left;
             background: #ffffff;
             color: #1a2733;
             border: 2px solid #d5e6f4;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: border-color 0.2s, background 0.2s, opacity 0.3s;
         }
@@ -427,7 +427,7 @@
                 setTimeout(() => scrollToNextPending(groupEl), 350);
             } else {
                 // 普通勾选/取消 -> 稍微挪一点点：勾选往上，取消往下（复位）
-                const step = btn.offsetHeight + 7; // 一项的高度 + 间距
+                const step = btn.offsetHeight + 10; // 一项的高度 + 间距
                 window.scrollBy({ top: isCompleted ? step : -step, behavior: 'smooth' });
             }
         }
