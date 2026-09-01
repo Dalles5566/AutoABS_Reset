@@ -20,7 +20,7 @@
             background: #1a1a2e;
             color: #eee;
             min-height: 100vh;
-            padding: 20px;
+            padding: 30vh 20px 20px;
         }
 
         h1 {
@@ -386,9 +386,9 @@
         // 滚动到下一个还没完成的目标：
         // 优先滚到「当前大组内」下一个未完成的子组；
         // 若当前大组已全部完成，则滚到下一个未完成的大组。
-        // 把目标元素滚到距屏幕顶部约 20% 的位置（比顶到最上边舒服，又不至于太靠下）
+        // 把目标元素滚到距屏幕顶部约 65% 的位置（落在屏幕偏下，靠近手指所在区域）
         function scrollToElement(el) {
-            const offset = window.innerHeight * 0.3;
+            const offset = window.innerHeight * 0.65;
             const top = el.getBoundingClientRect().top + window.scrollY - offset;
             window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
         }
