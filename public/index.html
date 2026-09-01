@@ -50,6 +50,27 @@
             color: #ff9800;
         }
 
+        .top-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .top-links a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            border: 1px solid #2a2a4a;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .top-links a:active {
+            background: #16213e;
+        }
+
         /* 倒计时区域 */
         .timer-area {
             text-align: center;
@@ -224,6 +245,10 @@
 <body>
     <h1>🔥 Core Workout</h1>
     <div class="date-status" id="dateStatus"></div>
+
+    <div class="top-links">
+        <a href="fishing.html">🎣 钓鱼清单 →</a>
+    </div>
 
     <!-- 大倒计时 -->
     <div class="timer-area">

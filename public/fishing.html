@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishing Checklist</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fishing">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            color: #00d4ff;
+        }
+
+        .date-status {
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+
+        .date-status .status {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .date-status .status.done {
+            color: #4caf50;
+        }
+
+        .date-status .status.pending {
+            color: #ff9800;
+        }
+
+        .top-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .top-links a {
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            border: 1px solid #2a2a4a;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        .top-links a:active {
+            background: #16213e;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            background: #00b8e6;
+        }
+
+        .btn.secondary {
+            background: #16213e;
+            color: #00d4ff;
+            border: 2px solid #2a2a4a;
+        }
+
+        .btn.secondary:active {
+            background: #1a1a2e;
+        }
+
+        #output {
+            margin: 20px auto 0;
+            max-width: 500px;
+        }
+
+        .group {
+            display: block;
+            background: #16213e;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .group.all-done {
+            opacity: 0.4;
+        }
+
+        .group-header {
+            font-size: 0.85rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* 每个清单项按钮 */
+        .item-btn {
+            display: block;
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-align: left;
+            background: #1a1a2e;
+            color: #eee;
+            border: 2px solid #2a2a4a;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, opacity 0.3s;
+        }
+
+        .item-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-btn:active {
+            background: #222244;
+        }
+
+        .item-btn.completed {
+            border-color: #4caf50;
+            background: #1a2e1a;
+            opacity: 0.5;
+        }
+
+        .item-btn .item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-btn .item-name {
+            display: block;
+        }
+
+        .item-btn .item-check {
+            font-size: 1.2rem;
+            color: #555;
+            margin-left: 8px;
+        }
+
+        .item-btn.completed .item-check {
+            color: #4caf50;
+        }
+
+        .item-btn .item-note {
+            display: block;
+            font-size: 0.9rem;
+            color: #ffd700;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎣 出海钓鱼------钓鱼清单</h1>
+    <div class="date-status" id="dateStatus"></div>
+
+    <div class="top-links">
+        <a href="index.html">← 回训练</a>
+    </div>
+
+    <button class="btn secondary" onclick="resetAll()">重置清单</button>
+    <div id="output"></div>
+
+    <script>
+        // 钓鱼前清单，分组管理。note 为可选备注。
+        const groups = [
+            {
+                title: "救命必带",
+                items: [
+                    { name: "救生衣", note: "救生衣" }
+                ]
+            },
+            {
+                title: "防水袋-Main",
+                items: [
+                    { name: "必须挂着-Whistler", note: "口哨" },
+                    { name: "必须挂着-Compass", note: "Compa指南针" },
+                    { name: "Food", note: "食物" },
+                    { name: "Water", note: "水" },
+                    { name: "WaterProof Phone Case", note: "防水手机壳"},
+                    { name: "Air Pump", note: "船用主充气泵"},
+                    { name: "Sun Glass", note: "太阳镜"},
+                    { name: "Sun Hat", note: "太阳帽"},
+                    { name: "Sun Screen", note: "防晒霜"},
+                ]
+            },
+            {
+                title: "防水袋-Fish",
+                items: [
+                    { name: "鱼线", note: "鱼线" },
+                    { name: "Hooks Pack", note: "组装好的鱼钩线" },
+                    { name: "Weight", note: "铅" },
+                    { name: "TackleBox", note: "鱼钩工具箱" },
+                    { name: "✂️✂️✂️✂️", note: "剪刀" },
+                    { name: "Fishing Hook Remover", note: "取钩器" }
+                ]
+            },
+            {
+            title: "钓鱼相关",
+                items: [
+                    { name: "Fishing Rod", note: "鱼竿" },
+                    { name: "Fish Box", note: "钓鱼桶, 同时当Bailer"},
+                    { name: "装鱼箱 Air Pump", note: "增氧泵" },               
+                    { name: "bait 1", note: "鱿鱼" },
+                    { name: "bait 2", note: "小蟹" },
+                    { name: "bait 3", note: "假饵" },
+                ]
+            },
+            {
+                title: "临----出门前检查",
+                items: [
+                    { name: "Iphone", note: "手机" },
+                    { name: "Car Key", note: "车钥匙" }
+                ]
+            },
+            {
+                title: "在Uda家",
+                items: [
+                    { name: "Aircat355", note: "气垫船" },
+                    { name: "Paddles", note: "桨" },
+                    { name: "Mercury 3.5", note: "马达" },
+                    { name: "Kill Switch Lanyard", note: "马达熄火绳" },
+                    { name: "Extra Fuel", note: "额外油桶 + 确认有油" },
+                    { name: "Anchor", note: "锚" },
+                    { name: "Anchor Rope", note: "锚绳" }
+                ]
+            }
+        ];
+
+        const STORAGE_KEY = 'fishing-checklist-state';
+
+        // 读取保存的完成状态：{ "组标题::项名": true }
+        function loadState() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveState(state) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        let state = loadState();
+
+        function itemKey(groupTitle, name) {
+            return groupTitle + '::' + name;
+        }
+
+        function getToday() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const weekday = weekdays[d.getDay()];
+            return `${year}/${month}/${day}（周${weekday}）`;
+        }
+
+        function updateDateStatus() {
+            const total = document.querySelectorAll('.item-btn').length;
+            const done = document.querySelectorAll('.item-btn.completed').length;
+            const statusEl = document.getElementById('dateStatus');
+            const allDone = total > 0 && done === total;
+            statusEl.innerHTML = `${getToday()} <span class="status ${allDone ? 'done' : 'pending'}">${allDone ? '✅ 都齐了' : `⏳ ${done}/${total}`}</span>`;
+        }
+
+        // 一组全部完成后，把该组沉底
+        function checkGroupDone(groupEl) {
+            const buttons = groupEl.querySelectorAll('.item-btn');
+            const allDone = Array.from(buttons).every(b => b.classList.contains('completed'));
+            if (allDone) {
+                groupEl.classList.add('all-done');
+                groupEl.parentNode.appendChild(groupEl);
+            } else {
+                groupEl.classList.remove('all-done');
+            }
+        }
+
+        function handleItemClick(btn) {
+            const groupEl = btn.closest('.group');
+            const isCompleted = btn.classList.toggle('completed');
+            btn.querySelector('.item-check').textContent = isCompleted ? '✓' : '○';
+
+            // 保存状态
+            const key = btn.dataset.key;
+            if (isCompleted) {
+                state[key] = true;
+            } else {
+                delete state[key];
+            }
+            saveState(state);
+
+            updateDateStatus();
+            checkGroupDone(groupEl);
+        }
+
+        function render() {
+            const output = document.getElementById('output');
+            output.innerHTML = groups.map(group => {
+                const buttons = group.items.map(item => {
+                    const key = itemKey(group.title, item.name);
+                    const done = !!state[key];
+                    const noteHtml = item.note ? `<span class="item-note">${item.note}</span>` : '';
+                    return `<button class="item-btn ${done ? 'completed' : ''}"
+                        data-key="${key}"
+                        onclick="handleItemClick(this)">
+                        <div class="item-top">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-check">${done ? '✓' : '○'}</span>
+                        </div>
+                        ${noteHtml}
+                    </button>`;
+                }).join('');
+
+                return `<div class="group">
+                    <div class="group-header">${group.title}</div>
+                    ${buttons}
+                </div>`;
+            }).join('');
+
+            // 已经全完成的组，初始就沉底
+            document.querySelectorAll('.group').forEach(g => checkGroupDone(g));
+            updateDateStatus();
+        }
+
+        function resetAll() {
+            state = {};
+            saveState(state);
+            render();
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        render();
+    </script>
+</body>
+</html>
