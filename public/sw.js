@@ -1,10 +1,12 @@
-const CACHE_NAME = 'core-workout-v12';
+const CACHE_NAME = 'core-workout-v13';
 const ASSETS = [
     './',
     './index.html',
     './fishing.html',
     './sailing.html',
-    './manifest.json'
+    './manifest.json',
+    './manifest-fishing.json',
+    './manifest-sailing.json'
 ];
 
 self.addEventListener('install', event => {
