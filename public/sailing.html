@@ -411,9 +411,13 @@
             const subJustDone = checkSubgroupDone(subEl);
             const groupJustDone = checkGroupDone(groupEl);
 
-            // 只在勾选（而非取消）且刚完成一个子组或大组时，自动滚到下一个待办
             if (isCompleted && (subJustDone || groupJustDone)) {
+                // 刚完成一个子组或大组 -> 自动滚到下一个待办（大滚动优先，不再叠加小微调）
                 setTimeout(() => scrollToNextPending(groupEl), 350);
+            } else {
+                // 普通勾选/取消 -> 稍微挪一点点：勾选往上，取消往下（复位）
+                const step = btn.offsetHeight + 8; // 一项的高度 + 间距
+                window.scrollBy({ top: isCompleted ? step : -step, behavior: 'smooth' });
             }
         }
 
