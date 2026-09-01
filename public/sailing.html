@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>出海前准备</title>
     <link rel="manifest" href="manifest-sailing.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -236,6 +236,17 @@
     <div id="output"></div>
 
     <script>
+        // 禁止页面缩放（iOS Safari 会忽略 viewport 的 user-scalable，需 JS 兜底）
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        // 拦截双击放大
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', e => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
+
         // 出海前准备清单，分组管理。
         // 普通组用 items；带子分组的组用 subgroups（每个子组有 title + items）。
         const groups = 

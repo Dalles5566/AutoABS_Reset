@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fishing Checklist</title>
     <link rel="manifest" href="manifest-fishing.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -235,6 +235,17 @@
     <div id="output"></div>
 
     <script>
+        // 禁止页面缩放（iOS Safari 会忽略 viewport 的 user-scalable，需 JS 兜底）
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        // 拦截双击放大
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', e => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
+
         // 钓鱼前清单，分组管理。note 为可选备注。
         const groups = [
             {

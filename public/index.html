@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Core Workout Shuffler</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -257,6 +257,17 @@
     <div id="output"></div>
 
     <script>
+        // 禁止页面缩放（iOS Safari 会忽略 viewport 的 user-scalable，需 JS 兜底）
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        // 拦截双击放大
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', e => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
+
         const exercises = [
             { name: "Plain", score: 1, note: "平板支撑", weight: "" },
             { name: "Leg Raises", score: 1, note: "抬腿, 平躺, 腿放下, 腿抬起", weight: "" },
