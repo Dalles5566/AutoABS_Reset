@@ -459,7 +459,15 @@
             const subJustDone = checkSubgroupDone(subEl);
             const groupJustDone = checkGroupDone(groupEl);
 
-            if (isCompleted && (subJustDone || groupJustDone)) {
+            // 整个清单是否全部完成
+            const total = document.querySelectorAll('.item-btn').length;
+            const doneCount = document.querySelectorAll('.item-btn.completed').length;
+            const allItemsDone = total > 0 && doneCount === total;
+
+            if (isCompleted && allItemsDone) {
+                // 全部完成 -> 自动滚回最上面
+                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 350);
+            } else if (isCompleted && (subJustDone || groupJustDone)) {
                 // 刚完成一个子组或大组 -> 自动滚到下一个待办（大滚动优先，不再叠加小微调）
                 setTimeout(() => scrollToNextPending(groupEl), 350);
             } else {

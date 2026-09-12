@@ -256,7 +256,7 @@
                 {
                     title: "① 组装充气艇",
                     items: [
-                        { name: "从【🎒防水袋🎒-Sub】拿出充气泵", note: "从【🎒防水袋🎒-Sub】拿出充气泵" },
+                        { name: "从【🎒防水袋🎒-Sub】拿出『充气泵』", note: "从【🎒防水袋🎒-Sub】拿出充气泵" },
                         { name: "给【🚢船🚢】打气", note: "给【🚢船🚢】打气" },
                         { name: "安装『Paddles』到船", note: "把『桨』安装到【🚢船🚢】上" },
                         { name: "拿出『🪛电动螺丝刀🪛』", note: "拿出『🪛电动螺丝刀🪛』" },
@@ -441,7 +441,15 @@
             const subJustDone = checkSubgroupDone(subEl);
             const groupJustDone = checkGroupDone(groupEl);
 
-            if (isCompleted && (subJustDone || groupJustDone)) {
+            // 整个清单是否全部完成
+            const total = document.querySelectorAll('.item-btn').length;
+            const doneCount = document.querySelectorAll('.item-btn.completed').length;
+            const allItemsDone = total > 0 && doneCount === total;
+
+            if (isCompleted && allItemsDone) {
+                // 全部完成 -> 自动滚回最上面
+                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 350);
+            } else if (isCompleted && (subJustDone || groupJustDone)) {
                 // 刚完成一个子组或大组 -> 自动滚到下一个待办（大滚动优先，不再叠加小微调）
                 setTimeout(() => scrollToNextPending(groupEl), 350);
             } else {
